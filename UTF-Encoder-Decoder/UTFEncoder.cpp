@@ -41,6 +41,26 @@ namespace utf {
 		return encoded;
 	}
 
+	EncodedBytes encodeValueToUTF16(uint32_t value) {
+		EncodedBytes encoded;
+		if (value < 0xFFFF) {
+			encoded.data[0] = (value & 0xFF00) >> 8;
+			encoded.data[1] = value & 0x00FF;
+			encoded.size = 2;
+		}
+		else {
+			uint16_t highSurrogate = (value >> 10) + 0xD800;
+			uint16_t lowSurrogate = (value & 0x3FF) + 0xDC00;
+			encoded.data[0] = (highSurrogate >> 8) & 0xFF;
+			encoded.data[1] = highSurrogate & 0xFF;
+			encoded.data[2] = (lowSurrogate >> 8) & 0xFF;
+			encoded.data[3] = lowSurrogate & 0xFF;
+			encoded.size = 4;
+		}
+
+		return encoded;
+	}
+
 
 // Implementation
 	std::string encodeAsUTF8(const char* data, const size_t size, const bool includeBOM) {
@@ -64,10 +84,82 @@ namespace utf {
 		return encoded;
 	}
 
-	std::string encodeAsUTF8(const char16_t* data, const size_t size, const bool includeBOM);
-	std::string encodeAsUTF8(const char32_t* data, const size_t size, const bool includeBOM);
+	std::string encodeAsUTF8(const char16_t* data, const size_t size, const bool includeBOM) {
+		std::string encoded;
+
+		if (includeBOM) {
+			encoded = getBOM(Encoding::UTF8);
+		}
+
+		for (int i = 0; i < size; i++) {
+			if (data[i] > 0x7F) { // needs 2+ byte representation
+				EncodedBytes encodedBytes = encodeValueToUTF8(data[i]);
+				for (int j = 0; j < encodedBytes.size; j++) {
+					encoded += data[j];
+				}
+			}
+			else {
+				encoded += data[i];
+			}
+		}
+
+		return encoded; 
+	}
+
+	std::string encodeAsUTF8(const char32_t* data, const size_t size, const bool includeBOM) {
+		std::string encoded;
+
+		if (includeBOM) {
+			encoded = getBOM(Encoding::UTF8);
+		}
+
+		for (int i = 0; i < size; i++) {
+			if (data[i] > 0x7F) { // needs 2+ byte representation
+				EncodedBytes encodedBytes = encodeValueToUTF8(data[i]);
+				for (int j = 0; j < encodedBytes.size; j++) {
+					encoded += data[j];
+				}
+			}
+			else {
+				encoded += data[i];
+			}
+		}
+
+		return encoded;
+	}
 
 	std::string encodeAsUTF16BE(const char* data, const size_t size);
+	//std::string encodeAsUTF16BE(const char* data, const size_t size) {
+	//	std::string encoded;
+
+	//	const size_t evenSize = size / 2 * 2;
+
+	//	uint32_t value32 = 0;
+	//	uint16_t value16 = 0;
+	//	for (int i = 0; i < size; i++) {
+	//		if (i & 1) {
+	//			value16 |= data[i];
+
+	//			if (value16 > 0xD7FF) {
+
+	//			if (value > 0x7F) { // needs 2+ byte representation
+	//				EncodedBytes encodedBytes = encodeValueToUTF8(value);
+	//				for (int j = 0; j < encodedBytes.size; j++) {
+	//					encoded += data[j];
+	//				}
+	//			}
+	//			else {
+	//				encoded += data[i];
+	//			}
+	//		}
+	//		else {
+	//			value16 = (uint16_t)data[i] << 8;
+	//		}
+	//	}
+
+	//	return encoded;
+	//}
+
 	std::string encodeAsUTF16BE(const char16_t* data, const size_t size);
 	std::string encodeAsUTF16BE(const char32_t* data, const size_t size);
 
@@ -82,15 +174,4 @@ namespace utf {
 	std::string encodeAsUTF32LE(const char* data, const size_t size);
 	std::string encodeAsUTF32LE(const char16_t* data, const size_t size);
 	std::string encodeAsUTF32LE(const char32_t* data, const size_t size);
-
-	std::string getBOM(Encoding encoding) {
-		switch (encoding) {
-		case Encoding::UTF8     : return "\xEF\xBB\xBF";
-		case Encoding::UTF16_BE : return "\xFE\xFF";
-		case Encoding::UTF16_LE : return "\xFF\xFE";
-		case Encoding::UTF32_BE : return std::string("\x00\x00\xFE\xFF", 4);
-		case Encoding::UTF32_LE : return std::string("\xFF\xFE\x00\x00", 4);
-		default : return "";
-		}
-	}
 }

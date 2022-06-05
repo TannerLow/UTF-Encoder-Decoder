@@ -9,9 +9,9 @@
 //std::vector<uint16_t> decodeToInt16(const char* encoded);
 
 namespace utf {
-	Encoding getEncoding(const std::string& encoded, bool assumeUTF16 = true);
-	Encoding getEncoding(const char* encoded, bool assumeUTF16 = true);
-	Encoding getEncoding(std::ifstream& file, bool assumeUTF16 = true);
+	Encoding getEncoding(const std::string& encoded, const bool assumeUTF16 = true);
+	Encoding getEncoding(const char* encoded, const size_t length, const bool assumeUTF16 = true);
+	Encoding getEncoding(std::ifstream& file, const bool assumeUTF16 = true);
 
 	std::u16string decodeToU16(const std::string& encoded);
 	std::u16string decodeToU16(const char* encoded);

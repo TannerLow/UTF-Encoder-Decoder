@@ -23,6 +23,4 @@ namespace utf {
 	std::string encodeAsUTF32LE(const char* data, const size_t size);
 	std::string encodeAsUTF32LE(const char16_t* data, const size_t size);
 	std::string encodeAsUTF32LE(const char32_t* data, const size_t size);
-
-	std::string getBOM(Encoding encoding);
 }
